@@ -1,8 +1,10 @@
 from dependency_injector import containers, providers
 
+from app.core.db import get_async_session
+from app.core.google_client import get_service
 from app.models import CharityProject, Donation
 from app.repositories import CharityProjectRepository, DonationRepository
-from app.services.google_api_servies import GoogleServices
+from app.services.google_api_servies import GoogleService
 
 
 class Container(containers.DeclarativeContainer):
@@ -17,11 +19,14 @@ class Container(containers.DeclarativeContainer):
             "app.api.endpoints.google",
         ],
     )
-
+    db_session = providers.Resource(get_async_session)
     charity_repository = providers.Singleton(
-        CharityProjectRepository, model=CharityProject
+        CharityProjectRepository, model=CharityProject, session=db_session
     )
     donation_repository = providers.Singleton(
-        DonationRepository, model=Donation
+        DonationRepository, model=Donation, session=db_session
     )
-    google_services = providers.Singleton(GoogleServices)
+    google_get_service = providers.Resource(get_service)
+    google_service = providers.Factory(
+        GoogleService, wrapper_services=google_get_service
+    )

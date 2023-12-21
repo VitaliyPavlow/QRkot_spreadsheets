@@ -3,9 +3,8 @@ from typing import Union
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.containers import Container
+from app.containers import Container
 from app.models import CharityProject, Donation
 from app.repositories import CharityProjectRepository, DonationRepository
 
@@ -22,7 +21,6 @@ async def close_the_object(
 
 @inject
 async def update_investment_information(
-    session: AsyncSession,
     charity_repository: CharityProjectRepository = Depends(
         Provide[Container.charity_repository]
     ),
@@ -30,16 +28,18 @@ async def update_investment_information(
         Provide[Container.donation_repository]
     ),
 ) -> None:
-    """
-    Обновить информацию об инвестициях в открытых проектах и пожертвованиях.
+    """Обновление данных об инвестициях.
+
+    Обновить информацию об инвестициях
+    в открытых проектах и пожертвованиях.
     Успешно потраченные/инвестированные закрыть.
     Посчитать разницу и сохранить остатки.
     """
-    open_projects = await charity_repository.get_all_open_objects_sorted_by_id(
-        session
+    open_projects = (
+        await charity_repository.get_all_open_objects_sorted_by_id()
     )
     open_donations = (
-        await donation_repository.get_all_open_objects_sorted_by_id(session)
+        await donation_repository.get_all_open_objects_sorted_by_id()
     )
 
     for donation in open_donations:
@@ -51,7 +51,7 @@ async def update_investment_information(
             if tail > 0:
                 project.invested_amount = investment
                 donation = await close_the_object(donation)
-                session.add(project)
+                charity_repository.session.add(project)
                 break
             elif tail < 0:
                 donation.invested_amount += (
@@ -59,11 +59,11 @@ async def update_investment_information(
                 )
                 project = await close_the_object(project)
                 donation_sum = abs(tail)
-                session.add(project)
+                charity_repository.session.add(project)
             else:
                 project = await close_the_object(project)
                 donation = await close_the_object(donation)
-                session.add(project)
+                charity_repository.session.add(project)
                 break
-        session.add(donation)
-    await session.commit()
+        donation_repository.session.add(donation)
+    await donation_repository.session.commit()

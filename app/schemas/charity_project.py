@@ -5,12 +5,16 @@ from pydantic import BaseModel, Extra, Field, PositiveInt
 
 
 class CharityProjectCreate(BaseModel):
+    """Pydantic схема для создания проекта."""
+
     name: str = Field(..., min_length=1, max_length=100)
     description: str = Field(..., min_length=1)
     full_amount: PositiveInt
 
 
 class CharityProjectUpdate(BaseModel):
+    """Pydantic схема для обновления проекта."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     description: Optional[str] = Field(None, min_length=1)
     full_amount: Optional[PositiveInt]
@@ -20,6 +24,8 @@ class CharityProjectUpdate(BaseModel):
 
 
 class CharityProjectDB(CharityProjectCreate):
+    """Pydantic схема для БД."""
+
     id: int
     invested_amount: int
     fully_invested: bool

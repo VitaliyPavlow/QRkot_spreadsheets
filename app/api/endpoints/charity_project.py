@@ -1,17 +1,14 @@
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.validators import (
     check_invested_amount_is_empty,
     check_new_amount_greater_then_invested_amount,
-    check_project_exists,
     check_project_is_not_closed,
     check_project_is_not_closed_for_update,
     check_project_name_duplicate,
 )
-from app.core.containers import Container
-from app.core.db import get_async_session
+from app.containers import Container
 from app.core.user import current_superuser
 from app.repositories import CharityProjectRepository
 from app.schemas.charity_project import (
@@ -33,13 +30,12 @@ router = APIRouter(prefix="/charity_project", tags=["charity project"])
 )
 @inject
 async def get_all_charity_projects(
-    session: AsyncSession = Depends(get_async_session),
     charity_repository: CharityProjectRepository = Depends(
         Provide[Container.charity_repository]
     ),
 ):
     """Получить список всех проектов."""
-    return await charity_repository.get_list(session)
+    return await charity_repository.get_list()
 
 
 @router.post(
@@ -52,16 +48,15 @@ async def get_all_charity_projects(
 @inject
 async def create_new_charity_project(
     charity: CharityProjectCreate,
-    session: AsyncSession = Depends(get_async_session),
     charity_repository: CharityProjectRepository = Depends(
         Provide[Container.charity_repository]
     ),
 ):
     """Создать новый проект."""
-    await check_project_name_duplicate(charity.name, session)
-    new_project = await charity_repository.create(charity, session)
-    await update_investment_information(session)
-    await session.refresh(new_project)
+    await check_project_name_duplicate(charity.name)
+    new_project = await charity_repository.create(charity)
+    await update_investment_information()
+    await charity_repository.session.refresh(new_project)
     return new_project
 
 
@@ -74,16 +69,15 @@ async def create_new_charity_project(
 @inject
 async def delete_charity_project(
     project_id: int,
-    session: AsyncSession = Depends(get_async_session),
     charity_repository: CharityProjectRepository = Depends(
         Provide[Container.charity_repository]
     ),
 ):
     """Удаление проекта. Только для суперюзеров. Только пустые проекты."""
-    project = await check_project_exists(project_id, session)
+    project = await charity_repository.get_by_attribute("id", project_id)
     await check_project_is_not_closed(project)
     await check_invested_amount_is_empty(project)
-    return await charity_repository.remove(project, session)
+    return await charity_repository.remove(project)
 
 
 @router.patch(
@@ -96,16 +90,15 @@ async def delete_charity_project(
 async def update_charity_project(
     project_id: int,
     obj_in: CharityProjectUpdate,
-    session: AsyncSession = Depends(get_async_session),
     charity_repository: CharityProjectRepository = Depends(
         Provide[Container.charity_repository]
     ),
 ):
     """Редактирование проекта. Только открытй проект. Только суперюзер."""
-    project = await check_project_exists(project_id, session)
+    project = await charity_repository.get_by_attribute("id", project_id)
     await check_project_is_not_closed_for_update(project)
-    await check_project_name_duplicate(obj_in.name, session)
+    await check_project_name_duplicate(obj_in.name)
     await check_new_amount_greater_then_invested_amount(
         project, obj_in.full_amount
     )
-    return await charity_repository.update(project, obj_in, session)
+    return await charity_repository.update(project, obj_in)

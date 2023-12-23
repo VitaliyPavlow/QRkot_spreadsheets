@@ -50,7 +50,6 @@ async def create_donation(
     """Сделать пожертвование."""
     new_donation = await donation_repository.create(obj_in=obj_in, user=user)
     await update_investment_information()
-    await donation_repository.session.refresh(new_donation)
     return new_donation
 
 

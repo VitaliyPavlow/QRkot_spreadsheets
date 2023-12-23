@@ -3,6 +3,7 @@ from typing import Union
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.containers import Container
 from app.models import CharityProject, Donation
@@ -27,7 +28,8 @@ async def update_investment_information(
     donation_repository: DonationRepository = Depends(
         Provide[Container.donation_repository]
     ),
-) -> None:
+    session: AsyncSession = Depends(Provide[Container.db_session]),
+) -> Union[CharityProject, Donation]:
     """Обновление данных об инвестициях.
 
     Обновить информацию об инвестициях
@@ -51,7 +53,7 @@ async def update_investment_information(
             if tail > 0:
                 project.invested_amount = investment
                 donation = await close_the_object(donation)
-                charity_repository.session.add(project)
+                session.add(project)
                 break
             elif tail < 0:
                 donation.invested_amount += (
@@ -59,11 +61,11 @@ async def update_investment_information(
                 )
                 project = await close_the_object(project)
                 donation_sum = abs(tail)
-                charity_repository.session.add(project)
+                session.add(project)
             else:
                 project = await close_the_object(project)
                 donation = await close_the_object(donation)
-                charity_repository.session.add(project)
+                session.add(project)
                 break
-        donation_repository.session.add(donation)
-    await donation_repository.session.commit()
+        session.add(donation)
+    await session.commit()

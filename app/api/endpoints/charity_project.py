@@ -56,7 +56,7 @@ async def create_new_charity_project(
     await check_project_name_duplicate(charity.name)
     new_project = await charity_repository.create(charity)
     await update_investment_information()
-    await charity_repository.session.refresh(new_project)
+    await charity_repository.refresh(new_project)
     return new_project
 
 

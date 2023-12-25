@@ -1,6 +1,6 @@
 from dependency_injector import containers, providers
 
-from app.core.db import AsyncSessionLocal, get_async_session
+from app.core.db import AsyncSessionLocal
 from app.core.google_client import get_service
 from app.models import CharityProject, Donation
 from app.repositories import CharityProjectRepository, DonationRepository
@@ -20,18 +20,16 @@ class Container(containers.DeclarativeContainer):
         ],
     )
 
-    db_session = providers.Resource(get_async_session)
-
     db_session_factory = providers.Factory(AsyncSessionLocal)
 
     charity_repository = providers.Factory(
         CharityProjectRepository,
         model=CharityProject,
-        session=db_session_factory,
+        session_factory=db_session_factory,
     )
 
     donation_repository = providers.Factory(
-        DonationRepository, model=Donation, session=db_session_factory
+        DonationRepository, model=Donation, session_factory=db_session_factory
     )
 
     google_client = providers.Resource(get_service)

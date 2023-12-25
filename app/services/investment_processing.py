@@ -28,7 +28,9 @@ async def update_investment_information(
     donation_repository: DonationRepository = Depends(
         Provide[Container.donation_repository]
     ),
-    session: AsyncSession = Depends(Provide[Container.db_session]),
+    session_factory: AsyncSession = Depends(
+        Provide[Container.db_session_factory]
+    ),
 ) -> Union[CharityProject, Donation]:
     """Обновление данных об инвестициях.
 
@@ -43,29 +45,29 @@ async def update_investment_information(
     open_donations = (
         await donation_repository.get_all_open_objects_sorted_by_id()
     )
-
-    for donation in open_donations:
-        donation.invested_amount = donation.invested_amount or 0
-        donation_sum = donation.full_amount - donation.invested_amount
-        for project in open_projects:
-            investment = project.invested_amount + donation_sum
-            tail = project.full_amount - investment
-            if tail > 0:
-                project.invested_amount = investment
-                donation = await close_the_object(donation)
-                session.add(project)
-                break
-            elif tail < 0:
-                donation.invested_amount += (
-                    project.full_amount - project.invested_amount
-                )
-                project = await close_the_object(project)
-                donation_sum = abs(tail)
-                session.add(project)
-            else:
-                project = await close_the_object(project)
-                donation = await close_the_object(donation)
-                session.add(project)
-                break
-        session.add(donation)
-    await session.commit()
+    async with session_factory as session:
+        for donation in open_donations:
+            donation.invested_amount = donation.invested_amount or 0
+            donation_sum = donation.full_amount - donation.invested_amount
+            for project in open_projects:
+                investment = project.invested_amount + donation_sum
+                tail = project.full_amount - investment
+                if tail > 0:
+                    project.invested_amount = investment
+                    donation = await close_the_object(donation)
+                    session.add(project)
+                    break
+                elif tail < 0:
+                    donation.invested_amount += (
+                        project.full_amount - project.invested_amount
+                    )
+                    project = await close_the_object(project)
+                    donation_sum = abs(tail)
+                    session.add(project)
+                else:
+                    project = await close_the_object(project)
+                    donation = await close_the_object(donation)
+                    session.add(project)
+                    break
+            session.add(donation)
+        await session.commit()

@@ -15,8 +15,8 @@ class CharityProjectRepository(BaseCharityRepository):
         completion_rate = extract("epoch", self.model.close_date) - extract(
             "epoch", self.model.create_date
         )
-        async with self.session:
-            projects = await self.session.execute(
+        async with self.session as session:
+            projects = await session.execute(
                 select(self.model)
                 .filter(self.model.close_date.isnot(None))
                 .order_by(completion_rate)

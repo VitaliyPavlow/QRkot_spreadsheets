@@ -12,14 +12,14 @@ ModelType = TypeVar("ModelType")
 
 
 class BaseRepository:
-    def __init__(self, model: ModelType, session: AsyncSession):
+    def __init__(self, model: ModelType, session_factory: AsyncSession):
         self.model = model
-        self.session = session
+        self.session = session_factory
 
     async def get_list(self) -> List[ModelType]:
         """Получить полный список объектов."""
-        async with self.session:
-            db_objs = await self.session.execute(select(self.model))
+        async with self.session as session:
+            db_objs = await session.execute(select(self.model))
             return db_objs.scalars().all()
 
     async def create(self, obj_in, user: Optional[User] = None) -> ModelType:
@@ -28,17 +28,17 @@ class BaseRepository:
         if user is not None:
             obj_in_data["user_id"] = user.id
         db_obj = self.model(**obj_in_data)
-        async with self.session:
-            self.session.add(db_obj)
-            await self.session.commit()
-            await self.session.refresh(db_obj)
+        async with self.session as session:
+            session.add(db_obj)
+            await session.commit()
+            await session.refresh(db_obj)
         return db_obj
 
     async def remove(self, db_obj) -> ModelType:
         """Удалить объект."""
-        async with self.session:
-            await self.session.delete(db_obj)
-            await self.session.commit()
+        async with self.session as session:
+            await session.delete(db_obj)
+            await session.commit()
         return db_obj
 
     async def update(self, db_obj, obj_in) -> ModelType:
@@ -49,16 +49,16 @@ class BaseRepository:
         for field in obj_data:
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
-        async with self.session:
-            self.session.add(db_obj)
-            await self.session.commit()
-            await self.session.refresh(db_obj)
+        async with self.session as session:
+            session.add(db_obj)
+            await session.commit()
+            await session.refresh(db_obj)
         return db_obj
 
     async def refresh(self, obj_in: ModelType) -> ModelType:
-        async with self.session:
-            self.session.add(obj_in)
-            await self.session.refresh(obj_in)
+        async with self.session as session:
+            session.add(obj_in)
+            await session.refresh(obj_in)
             return obj_in
 
     async def get_by_attribute(
@@ -66,8 +66,8 @@ class BaseRepository:
     ) -> ModelType:
         """Получить объект по указанному атрибуту."""
         try:
-            async with self.session:
-                obj = await self.session.execute(
+            async with self.session as session:
+                obj = await session.execute(
                     select(self.model).where(
                         getattr(self.model, attribute_name) == search_value
                     )
@@ -85,8 +85,8 @@ class BaseCharityRepository(BaseRepository):
         self,
     ) -> List[Union[CharityProject, Donation]]:
         """Получить список открытых объектов, отсортированных по дате создания."""
-        async with self.session:
-            open_objects = await self.session.execute(
+        async with self.session as session:
+            open_objects = await session.execute(
                 select(self.model)
                 .where(self.model.fully_invested.is_(False))
                 .order_by(self.model.id)

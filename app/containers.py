@@ -1,7 +1,9 @@
+from aiogoogle import Aiogoogle
+from aiogoogle.auth.creds import ServiceAccountCreds
 from dependency_injector import containers, providers
 
 from app.core.db import AsyncSessionLocal
-from app.core.google_client import get_service
+from app.core.google_client import INFO, SCOPES
 from app.models import CharityProject, Donation
 from app.repositories import CharityProjectRepository, DonationRepository
 from app.services.google_api_servies import GoogleService
@@ -32,7 +34,13 @@ class Container(containers.DeclarativeContainer):
         DonationRepository, model=Donation, session_factory=db_session_factory
     )
 
-    google_client = providers.Resource(get_service)
+    google_service_credentials = providers.Singleton(
+        ServiceAccountCreds, scopes=SCOPES, **INFO
+    )
+
+    google_client = providers.Factory(
+        Aiogoogle, service_account_creds=google_service_credentials
+    )
 
     google_service = providers.Factory(
         GoogleService, wrapper_service=google_client

@@ -42,9 +42,9 @@ cd cat_charity_fund
 
 Cоздать и активировать виртуальное окружение:
 
-    ```
-    python3 -m venv venv
-    ```
+```
+python3 -m venv venv
+```
 
 * Если у вас Linux/macOS
 
@@ -60,30 +60,30 @@ Cоздать и активировать виртуальное окружен�
 
 Установить зависимости из файла requirements.txt:
 
-    ```
-    python3 -m pip install --upgrade pip
-    ```
+```
+python3 -m pip install --upgrade pip
+```
     
-    ```
-    pip install -r requirements.txt
-    ```
+```
+pip install -r requirements.txt
+```
 
 # Команды для применения миграций Alembic
 
 Если Alembic еще не запущен в проекте, то его надо инициировать
-    ```
-    alembic init --template async alembic
-    ```
+```
+alembic init --template async alembic
+```
 Для создания файла миграций используйте
-    ```
-    alembic revision -m "Ваш комментарий."
-    ```
+```
+alembic revision -m "Ваш комментарий."
+```
 Для проведения миграций
-    ```
-    alembic upgrade head
-    ```
+```
+alembic upgrade head
+```
 
 # Запуск проекта из корневой директории
-    ```
-    uvicorn app.main:app
-    ```
+```
+uvicorn app.main:app
+```

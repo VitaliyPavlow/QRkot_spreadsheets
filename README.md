@@ -19,7 +19,7 @@
 
 # Стэк технологий.
 
-FastAPI, SQLAlchemi, MySQL, Alembic, Dependency Injector, Uvicorn, Aiogoogle
+FastAPI, Pydantic, SQLAlchemi, MySQL, Alembic, Dependency Injector, Uvicorn, Aiogoogle
 
 # Пример файла с переменными окружения
 

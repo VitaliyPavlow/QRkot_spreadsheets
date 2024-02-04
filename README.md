@@ -26,7 +26,7 @@ FastAPI, SQLAlchemi, MySQL, Alembic, Dependency Injector, Uvicorn, Aiogoogle
 
 # Документация OpenAPI
 
-После запуска проекта документация OpenAPI будет надохится по адресу
+После локального запуска проекта документация OpenAPI будет надохится по адресу
 http://127.0.0.1:8000/docs
 
 # Клонировать репозиторий и перейти в него в командной строке:
@@ -41,9 +41,9 @@ cd cat_charity_fund
 
 Cоздать и активировать виртуальное окружение:
 
-```
-python3 -m venv venv
-```
+    ```
+    python3 -m venv venv
+    ```
 
 * Если у вас Linux/macOS
 
@@ -59,30 +59,30 @@ python3 -m venv venv
 
 Установить зависимости из файла requirements.txt:
 
-```
-python3 -m pip install --upgrade pip
-```
-
-```
-pip install -r requirements.txt
-```
+    ```
+    python3 -m pip install --upgrade pip
+    ```
+    
+    ```
+    pip install -r requirements.txt
+    ```
 
 # Команды для применения миграций Alembic
 
-Усли Alembic еще не запущен в проекте, то его надо инициировать
-```
-alembic init --template async alembic
-```
+Если Alembic еще не запущен в проекте, то его надо инициировать
+    ```
+    alembic init --template async alembic
+    ```
 Для создания файла миграций используйте
-```
-alembic revision -m "Ваш комментарий."
-```
+    ```
+    alembic revision -m "Ваш комментарий."
+    ```
 Для проведения миграций
-```
-alembic upgrade head
-```
+    ```
+    alembic upgrade head
+    ```
 
 # Запуск проекта из корневой директории
-```
-uvicorn app.main:app
-```
+    ```
+    uvicorn app.main:app
+    ```
